@@ -1,8 +1,13 @@
-import { ThemeOptions } from '@mui/material/styles';
+import { ThemeOptions } from "@mui/material/styles";
 
 const lightThemeOptions: ThemeOptions = {
   palette: {
-    mode: 'light',
+    mode: "light",
+  },
+  typography: {
+    h1: {
+      fontSize: "3rem",
+    },
   },
 };
 

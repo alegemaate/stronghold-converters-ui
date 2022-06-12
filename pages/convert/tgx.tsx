@@ -1,68 +1,88 @@
+import { LoadingButton } from "@mui/lab";
+import { Grid, Typography } from "@mui/material";
+import { Container } from "@mui/system";
 import type { NextPage } from "next";
-import Head from "next/head";
-import Image from "next/image";
-import { useRef } from "react";
+import { useState } from "react";
+
+import { ImageRenderer } from "../../components/ImageRenderer";
+import { Layout } from "../../components/Layout";
 import { TGXLoader } from "../../lib/tgx-loader";
-import styles from "../../styles/Home.module.css";
 
 const TGXConverter: NextPage = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [imageData, setImageData] = useState<ImageData | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const loadFile = async (files: FileList | null) => {
-    const file = files?.item(0);
-    const ctx = canvasRef.current?.getContext("2d");
+    try {
+      setLoading(true);
 
-    if (!file || !ctx) {
-      return;
+      const file = files?.item(0);
+      if (!file) {
+        return;
+      }
+
+      // Convert to buffer
+      const buffer = await file.arrayBuffer();
+
+      // Save file name
+      setFileName(file.name.replace("tgx", "png"));
+
+      // Convert buffer to image data
+      const loader = new TGXLoader();
+      loader.loadFile(buffer);
+      const result = loader.getImageData();
+
+      setImageData(result);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
     }
-
-    const buffer = await file.arrayBuffer();
-
-    const loader = new TGXLoader();
-    const result = loader.loadTgx(buffer);
-    console.log(result);
-    ctx.clearRect(0, 0, 1000, 1000);
-    ctx.putImageData(result, 5, 5);
   };
 
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>TGX Converter</title>
-        <meta
-          name="description"
-          content="Convert Stronghold Crusader TGX files to PNG"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <Layout
+      title="TGX Converter"
+      description="Convert Stronghold Crusader TGX files to PNG"
+    >
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="h1">Convert TGX to PNG</Typography>
+        </Grid>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>Convert TGX to PNG</h1>
+        <Grid item xs={12}>
+          <Typography variant="body1">
+            Choose a file to convert to PNG
+          </Typography>
+        </Grid>
 
-        <p className={styles.description}>Choose a file to convert to PNG</p>
-        <div className={styles.grid}>
-          <input
-            type="file"
-            accept="*.tgx"
-            onChange={(event) => loadFile(event.target.files)}
-          />
-          <canvas width={1000} height={1000} ref={canvasRef} />
-        </div>
-      </main>
+        <Grid item xs={12}>
+          <LoadingButton
+            variant="contained"
+            component="label"
+            loading={loading}
+          >
+            Upload File
+            <input
+              type="file"
+              accept=".tgx"
+              onChange={(event) => loadFile(event.target.files)}
+              hidden
+            />
+          </LoadingButton>
+        </Grid>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
-    </div>
+        <Grid item xs={12}>
+          <ImageRenderer image={imageData} name={fileName} />
+        </Grid>
+
+        <Grid item xs={12}>
+          {error && <Typography variant="body1">{error}</Typography>}
+        </Grid>
+      </Grid>
+    </Layout>
   );
 };
 

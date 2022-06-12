@@ -1,165 +1,169 @@
-function dec2bin(dec: number) {
-  return dec.toString(2);
+import { convertColor } from "./color";
+import { FileParser } from "./file-parser";
+
+interface TgxToken {
+  type: TokenType;
+  length: number;
 }
 
-// Convert 15 bit colour to 24 bit
-const convertColor = (byte1: number, byte2: number) => {
-  // Extract values (gggbbbbb Xrrrrrgg)
-  const r = (byte2 & 0b01111100) >> 2;
-  const g = ((byte1 & 0b11100000) >> 5) | ((byte2 & 0b00000011) << 3);
-  const b = byte1 & 0b00011111;
+enum TokenType {
+  Stream = 0,
+  Transparent = 1,
+  Repeated = 2,
+  EndLine = 4,
+}
 
-  // Convert from 15 bit to 32
-  // Technically this will not use the full depth, but does not involve floats which is ideal
-  return {
-    r: r * 7,
-    g: g * 7,
-    b: b * 7,
-  };
-};
+export class TGXLoader extends FileParser {
+  private imageData: number[] = [];
 
-export class TGXLoader {
-  // // Look up address from pallette
-  // palleteLookup( addr: number, std::vector<unsigned int>* pall) {
-  //   if(addr < pall -> size()) {
-  //     return pall -> at(addr);
+  public width = 0;
+
+  public height = 0;
+
+  public loadFile(buffer: ArrayBuffer) {
+    this.loadBuffer(buffer);
+    this.readHeader();
+    this.readBody();
+  }
+
+  // // Look up address from palette
+  // paleteLookup( addr: number, std::vector<unsigned int>* pal) {
+  //   if(addr < pal -> size()) {
+  //     return pal -> at(addr);
   //   }
 
   //   return makecol(255, 0, 0);
   // }
 
-  // Load tgx from file
-  public loadTgx(buffer: ArrayBuffer) {
-    const array = new Uint8Array(buffer);
-
-    // Return new image
-    return this.parseTgx(array);
+  // Create image data
+  public getImageData() {
+    const bmp = new ImageData(this.width, this.height);
+    this.imageData.forEach((byte, index) => {
+      bmp.data[index] = byte;
+    });
+    return bmp;
   }
 
-  // Tgx helper used by file and memory
-  private parseTgx(bytes: Uint8Array, pall = null) {
-    // Iterator
-    let iter = 0;
+  // Read header data
+  private readHeader() {
+    const header = this.readNextBytes(8);
+    this.width = header[0] + 256 * header[1];
+    this.height = header[4] + 256 * header[5];
+  }
 
-    // Read the 8 byte header
-    const width: number = bytes[0] + 256 * bytes[1];
-    const height: number = bytes[4] + 256 * bytes[5];
-    iter += 8;
-
-    // Make bitmap
-    const bmp = new ImageData(width, height);
-    console.log({ width, height });
-
-    // Image position x/y
-    let x = 0;
-    let y = 0;
-
+  /**
+   *
+   * @param pal Palette (not supported yet)
+   */
+  private readBody(pal = null) {
     // Parse file
-    while (iter < bytes.length) {
-      // Close
-      if (y >= height) {
-        break;
-      }
-
+    while (this.index < this.bytes.length) {
       // Extract token and length
-      const token = bytes[iter] >> 5;
-      const length = (bytes[iter] & 0b00011111) + 1;
-      console.log("token", bytes[iter]);
-      iter += 1;
+      const token = this.readToken();
 
       // Deal with tokens accordingly
-      switch (token) {
+      switch (token.type) {
         // Pixel stream
-        case 0:
-          for (let t = x + length; x < t; x++) {
-            // 15 bit colour
-            if (pall == null) {
-              const { r, g, b } = convertColor(bytes[iter], bytes[iter + 1]);
-              const index = (x + y * width) * 4;
-              bmp.data[index] = r;
-              bmp.data[index + 1] = g;
-              bmp.data[index + 2] = b;
-              bmp.data[index + 3] = 255;
-              iter += 2;
-            }
-            // Palette lookup
-            else {
-              //   putpixel(bmp, x, y, pallete_lookup((unsigned char)bytes -> at(*iter), pall));
-              iter += 1;
-            }
-          }
-
+        case TokenType.Stream:
+          this.writePixels(token.length, pal);
           break;
 
         // Transparent pixels
-        case 1:
-          for (let t = x + length; x < t; x++) {
-            const index = (x + y * width) * 4;
-            bmp.data[index] = 0;
-            bmp.data[index + 1] = 0;
-            bmp.data[index + 2] = 0;
-            bmp.data[index + 3] = 0;
-          }
-
+        case TokenType.Transparent:
+          this.writeTransparent(token.length);
           break;
 
         // Repeating pixels
-        case 2:
-          // 15 bit colour
-          if (pall == null) {
-            for (let t = x + length; x < t; x++) {
-              const { r, g, b } = convertColor(bytes[iter], bytes[iter + 1]);
-              const index = (x + y * width) * 4;
-              bmp.data[index] = r;
-              bmp.data[index + 1] = g;
-              bmp.data[index + 2] = b;
-              bmp.data[index + 3] = 255;
-            }
-
-            iter += 2;
-          }
-          // Pallette lookup
-          else {
-            //   for(let t = x + length; x < t; x++) {
-            //     putpixel(bmp, x, y, pallete_lookup((unsigned char)bytes -> at(*iter), pall));
-            //   }
-
-            iter += 1;
-          }
-
+        case TokenType.Repeated:
+          this.writeRepeatedPixels(token.length, pal);
           break;
 
         // New line
-        case 4:
-          // Fill rest of line
-          for (; x < width; x++) {
-            const index = (x + y * width) * 4;
-            bmp.data[index] = 0;
-            bmp.data[index + 1] = 0;
-            bmp.data[index + 2] = 0;
-            bmp.data[index + 3] = 0;
-          }
-
-          // New line
-          y += 1;
-          x = 0;
+        case TokenType.EndLine:
+          this.fillLine();
           break;
 
         // Should never get here
         default:
-          console.log(
-            "Invalid token (",
-            token,
-            ") at ",
-            iter - 1,
-            " length ",
-            length
-          );
+          console.log(`Invalid token (${token}) at ${this.index - 1}`);
           break;
       }
     }
+  }
 
-    // Return bmp
-    return bmp;
+  /**
+   * Write "length" number of pixels
+   * @param len Length of pixel bytes
+   * @param pal Optional palete
+   */
+  private writePixels(len: number, pal = null) {
+    for (let i = 0; i < len; i++) {
+      // 15 bit colour
+      if (pal === null) {
+        const [byte1, byte2] = this.readNextBytes(2);
+        const { r, g, b } = convertColor(byte1, byte2);
+        this.imageData.push(r, g, b, 255);
+      }
+      // Palette lookup
+      else {
+        //   putpixel(bmp, x, y, palete_lookup((unsigned char)bytes -> at(*iter), pal));
+      }
+    }
+  }
+
+  /**
+   * Write transparent pixels with lenght of n
+   * @param len Length to write transparent pixels
+   */
+  private writeTransparent(len: number) {
+    for (let i = 0; i < len; i++) {
+      this.imageData.push(0, 0, 0, 0);
+    }
+  }
+
+  /**
+   * Read one pixel value and repeate it "len" times
+   * @param len Length to write pixels
+   * @param pal Optional palet for lookups
+   */
+  private writeRepeatedPixels(len: number, pal = null) {
+    // 15 bit colour
+    if (pal === null) {
+      const [byte1, byte2] = this.readNextBytes(2);
+      const { r, g, b } = convertColor(byte1, byte2);
+      for (let i = 0; i < len; i++) {
+        this.imageData.push(r, g, b, 255);
+      }
+    }
+    // Palettete lookup
+    else {
+      //   for(let t = x + len; x < t; x++) {
+      //     putpixel(bmp, x, y, palete_lookup((unsigned char)bytes -> at(*iter), pal));
+      //   }
+    }
+  }
+
+  /**
+   * Fill in the rest of the width of the image with transparent pixels
+   */
+  private fillLine() {
+    this.writeTransparent(this.imageData.length % this.width);
+  }
+
+  /**
+   * Read the next token
+   * Token types can be one of:
+   *  0 -> Stream of pixels
+   *  1 -> Transparent Pixels
+   *  2 -> Repeated Pixels
+   *  4 -> End of line
+   * @returns Type and length of token
+   */
+  private readToken(): TgxToken {
+    const tokenByte = this.readNextByte();
+    const type = tokenByte >> 5;
+    const length = (tokenByte & 0b00011111) + 1;
+
+    return { type, length };
   }
 }
