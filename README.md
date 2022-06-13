@@ -1,23 +1,28 @@
-This is a [Next.js](https://nextjs.org/), [MUI v5](https://mui.com/) and [Typescript](https://github.com/microsoft/TypeScript) starter. You can use this to start your Next.js + MUI + Typescript development faster and easier.
+# Stronghold Converters
+
+A collection of Javascript based file converters for Stronghold Crusader
+
+## Supported Formats
+
+|          | TGX | GM1 |
+| -------- | --- | --- |
+| From PNG | ✅  | 🚧  |
+| To PNG   | ✅  | 🚧  |
+
+## Demo
 
 ## Getting Started
 
-1. First download files.
-2. (Optional) If you want, You can also change the project name to whatever your like and also add the project name in "package.json".
-3. Run this command in the project directory to install dependencies:
+1. Install dependencies
 
 ```bash
-npm i
-# or
 yarn
 ```
 
-4. You can run dev server with the following command:
+2. You can run dev server with the following command:
 
 ```bash
-npm run dev
-# or
 yarn dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
