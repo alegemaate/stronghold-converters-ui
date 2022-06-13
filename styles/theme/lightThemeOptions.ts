@@ -9,6 +9,9 @@ const lightThemeOptions: ThemeOptions = {
       fontSize: "3rem",
     },
   },
+  shape: {
+    borderRadius: 10,
+  },
 };
 
 export default lightThemeOptions;

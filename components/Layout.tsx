@@ -15,7 +15,7 @@ const Main = styled("main")(({ theme }) => ({
   flexDirection: "column",
   justifyContent: "space-between",
   alignItems: "center",
-  backgroundColor: theme.palette.grey[200],
+  backgroundColor: theme.palette.grey[300],
 }));
 
 const Footer = styled("footer")(({ theme }) => ({
@@ -40,6 +40,7 @@ const StyledContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(4),
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius,
 }));
 
 export const Layout: React.FC<LayoutProps> = ({

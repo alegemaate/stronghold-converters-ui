@@ -9,7 +9,7 @@ const Home: NextPage = () => {
     <Layout title="Converters" description="File Conversion">
       <Typography variant="h1">Converters</Typography>
       <Typography variant="h2">A.D.S. Games</Typography>
-      <Link href="convert/tgx" passHref>
+      <Link href="convert/tgx-to-png" passHref>
         <MUILink variant="body2">TGX Converter</MUILink>
       </Link>
     </Layout>

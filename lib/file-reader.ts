@@ -1,4 +1,4 @@
-export class FileParser {
+export class FileReader {
   protected bytes = new Uint8Array();
 
   protected index = 0;

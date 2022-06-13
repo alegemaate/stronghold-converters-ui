@@ -1,5 +1,5 @@
-import { convertColor } from "./color";
-import { FileParser } from "./file-parser";
+import { color15to32 } from "./color";
+import { FileReader } from "./file-reader";
 
 interface TgxToken {
   type: TokenType;
@@ -13,7 +13,7 @@ enum TokenType {
   EndLine = 4,
 }
 
-export class TGXLoader extends FileParser {
+export class TgxReader extends FileReader {
   private imageData: number[] = [];
 
   public width = 0;
@@ -78,14 +78,17 @@ export class TGXLoader extends FileParser {
           this.writeRepeatedPixels(token.length, pal);
           break;
 
-        // New line
+        // New line, nothing to be done
         case TokenType.EndLine:
-          this.fillLine();
           break;
 
         // Should never get here
         default:
-          console.log(`Invalid token (${token}) at ${this.index - 1}`);
+          console.log(
+            `Invalid token (${token.type}, ${token.length}) at ${
+              this.index - 1
+            }`
+          );
           break;
       }
     }
@@ -101,7 +104,7 @@ export class TGXLoader extends FileParser {
       // 15 bit colour
       if (pal === null) {
         const [byte1, byte2] = this.readNextBytes(2);
-        const { r, g, b } = convertColor(byte1, byte2);
+        const { r, g, b } = color15to32(byte1, byte2);
         this.imageData.push(r, g, b, 255);
       }
       // Palette lookup
@@ -130,7 +133,7 @@ export class TGXLoader extends FileParser {
     // 15 bit colour
     if (pal === null) {
       const [byte1, byte2] = this.readNextBytes(2);
-      const { r, g, b } = convertColor(byte1, byte2);
+      const { r, g, b } = color15to32(byte1, byte2);
       for (let i = 0; i < len; i++) {
         this.imageData.push(r, g, b, 255);
       }
@@ -146,9 +149,9 @@ export class TGXLoader extends FileParser {
   /**
    * Fill in the rest of the width of the image with transparent pixels
    */
-  private fillLine() {
-    this.writeTransparent(this.imageData.length % this.width);
-  }
+  // private fillLine() {
+  //   this.writeTransparent(this.imageData.length % this.width);
+  // }
 
   /**
    * Read the next token

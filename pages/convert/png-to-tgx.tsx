@@ -1,15 +1,15 @@
 import { LoadingButton } from "@mui/lab";
 import { Grid, Typography } from "@mui/material";
-import { Container } from "@mui/system";
 import type { NextPage } from "next";
 import { useState } from "react";
+import { FileDownload } from "../../components/FileDownload";
 
-import { ImageRenderer } from "../../components/ImageRenderer";
 import { Layout } from "../../components/Layout";
-import { TGXLoader } from "../../lib/tgx-loader";
+import { fileToImageData } from "../../lib/convert";
+import { TgxWriter } from "../../lib/tgx-writer";
 
-const TGXConverter: NextPage = () => {
-  const [imageData, setImageData] = useState<ImageData | null>(null);
+const PngToTgx: NextPage = () => {
+  const [fileData, setFileData] = useState<ArrayBuffer | null>(null);
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,26 +17,26 @@ const TGXConverter: NextPage = () => {
   const loadFile = async (files: FileList | null) => {
     try {
       setLoading(true);
+      setError("");
 
       const file = files?.item(0);
       if (!file) {
         return;
       }
 
-      // Convert to buffer
-      const buffer = await file.arrayBuffer();
+      const imageData = await fileToImageData(file);
+
+      // Convert image data to file
+      const loader = new TgxWriter();
+      loader.loadImageData(imageData);
+      const result = loader.getFileBuffer();
+      setFileData(result);
 
       // Save file name
-      setFileName(file.name.replace("tgx", "png"));
-
-      // Convert buffer to image data
-      const loader = new TGXLoader();
-      loader.loadFile(buffer);
-      const result = loader.getImageData();
-
-      setImageData(result);
+      setFileName(file.name.replace("png", "tgx"));
     } catch (err) {
       setError((err as Error).message);
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -44,17 +44,19 @@ const TGXConverter: NextPage = () => {
 
   return (
     <Layout
-      title="TGX Converter"
-      description="Convert Stronghold Crusader TGX files to PNG"
+      title="PNG to TGX Converter"
+      description="Convert PNG files to Stronghold Crusader TGX"
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Typography variant="h1">Convert TGX to PNG</Typography>
+          <Typography variant="h1">
+            Convert PNG files to Stronghold Crusader TGX
+          </Typography>
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="body1">
-            Choose a file to convert to PNG
+            Choose a file to convert to TGX
           </Typography>
         </Grid>
 
@@ -67,7 +69,7 @@ const TGXConverter: NextPage = () => {
             Upload File
             <input
               type="file"
-              accept=".tgx"
+              accept=".png"
               onChange={(event) => loadFile(event.target.files)}
               hidden
             />
@@ -75,15 +77,15 @@ const TGXConverter: NextPage = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <ImageRenderer image={imageData} name={fileName} />
+          {error && <Typography variant="body1">{error}</Typography>}
         </Grid>
 
         <Grid item xs={12}>
-          {error && <Typography variant="body1">{error}</Typography>}
+          <FileDownload fileData={fileData} name={fileName} />
         </Grid>
       </Grid>
     </Layout>
   );
 };
 
-export default TGXConverter;
+export default PngToTgx;
