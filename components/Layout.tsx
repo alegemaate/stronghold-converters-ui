@@ -1,6 +1,7 @@
 import { Container, styled } from "@mui/material";
 import Head from "next/head";
 import { ReactNode } from "react";
+import { Nav } from "./Nav";
 
 interface LayoutProps {
   title: string;
@@ -50,12 +51,14 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => (
   <>
     <Head>
-      <title>{title}</title>
+      <title>{`${title} - Stronghold Converters`}</title>
       <meta name="description" content={description} />
       <link rel="icon" href="/favicon.ico" />
     </Head>
 
     <Main>
+      <Nav />
+
       <StyledContainer maxWidth="md">
         <Container>{children}</Container>
       </StyledContainer>

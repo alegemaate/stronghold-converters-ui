@@ -3,9 +3,9 @@ import { Grid, Typography } from "@mui/material";
 import type { NextPage } from "next";
 import { useState } from "react";
 
-import { ImageRenderer } from "../../components/ImageRenderer";
-import { Layout } from "../../components/Layout";
-import { TgxReader } from "../../lib/tgx-reader";
+import { ImageRenderer } from "../components/ImageRenderer";
+import { Layout } from "../components/Layout";
+import { TgxReader } from "../lib/tgx-reader";
 
 const TgxToPng: NextPage = () => {
   const [imageData, setImageData] = useState<ImageData | null>(null);
@@ -49,14 +49,15 @@ const TgxToPng: NextPage = () => {
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Typography variant="h1">
+          <Typography variant="h1">TGX to PNG Converter</Typography>
+          <Typography variant="h2">
             Convert Stronghold Crusader TGX files to PNG
           </Typography>
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="body1">
-            Choose a file to convert to PNG
+            Choose a TGX file to convert to PNG
           </Typography>
         </Grid>
 

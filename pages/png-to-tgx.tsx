@@ -2,11 +2,11 @@ import { LoadingButton } from "@mui/lab";
 import { Grid, Typography } from "@mui/material";
 import type { NextPage } from "next";
 import { useState } from "react";
-import { FileDownload } from "../../components/FileDownload";
 
-import { Layout } from "../../components/Layout";
-import { fileToImageData } from "../../lib/convert";
-import { TgxWriter } from "../../lib/tgx-writer";
+import { FileDownload } from "../components/FileDownload";
+import { Layout } from "../components/Layout";
+import { fileToImageData } from "../lib/convert";
+import { TgxWriter } from "../lib/tgx-writer";
 
 const PngToTgx: NextPage = () => {
   const [fileData, setFileData] = useState<ArrayBuffer | null>(null);
@@ -49,7 +49,8 @@ const PngToTgx: NextPage = () => {
     >
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <Typography variant="h1">
+          <Typography variant="h1">PNG to TGX Converter</Typography>
+          <Typography variant="h2">
             Convert PNG files to Stronghold Crusader TGX
           </Typography>
         </Grid>

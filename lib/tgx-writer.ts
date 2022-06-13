@@ -8,13 +8,13 @@ enum TokenType {
   EndLine = 4,
 }
 
-interface PixelStreamValue {
+interface PixelValue {
   r: number;
   g: number;
   b: number;
 }
 
-interface PixelValue {
+interface PixelCountValue {
   r: number;
   g: number;
   b: number;
@@ -24,14 +24,26 @@ interface PixelValue {
 
 const MAX_TOKEN_LENGTH = 32;
 
-const pixelValueEqual = (a: PixelValue, b: PixelValue) =>
+/**
+ * Utility for checking pixel equality
+ * @param a Pixel 1
+ * @param b Pixel 2
+ * @returns True if equal
+ */
+const pixelValueEqual = (a: PixelCountValue, b: PixelCountValue) =>
   a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
 
 export class TgxWriter extends FileWriter {
+  /// Width of image
   private width = 0;
 
+  /// Height of image
   private height = 0;
 
+  /**
+   * Load image data and convert to TGX
+   * @param imageData Image data from canvas to save
+   */
   public loadImageData(imageData: ImageData) {
     // Set dimensions
     this.width = imageData.width;
@@ -42,12 +54,18 @@ export class TgxWriter extends FileWriter {
     this.writeBody(imageData);
   }
 
-  // Create image data
+  /**
+   * Download array buffer file representation
+   * @returns Array buffer
+   */
   public getFileBuffer() {
     return this.getArrayBuffer();
   }
 
-  // Read header data
+  /**
+   * Write header to buffer
+   * Header includes width and height information
+   */
   private writeHeader() {
     const widthByte1 = this.width & 0b11111111;
     const widthByte2 = this.width >> 8;
@@ -75,7 +93,7 @@ export class TgxWriter extends FileWriter {
     // Write bytes, line by line
     pixelStack.forEach((line) => {
       // Stream happens when multiple pixels in a row that are not the same
-      const pixelStream: PixelStreamValue[] = [];
+      const pixelStream: PixelValue[] = [];
 
       line.forEach((pixel, index) => {
         // Transparent
@@ -87,7 +105,7 @@ export class TgxWriter extends FileWriter {
         // Repeated pixel (we allow some duplicates)
         else if (pixel.count > 2) {
           this.writePixelStream(pixelStream);
-          this.writePixelRepeated(pixel);
+          this.writePixelRepeated(pixel, pixel.count);
         }
 
         // Pixel stream
@@ -111,9 +129,15 @@ export class TgxWriter extends FileWriter {
     });
   }
 
-  private preprocessBody(imageData: ImageData): PixelValue[][] {
+  /**
+   * Preprocess image by splitting into lines and counting occurrences of
+   * the same colors for compression purposes
+   * @param imageData Image data from canvas
+   * @returns Line data
+   */
+  private preprocessBody(imageData: ImageData): PixelCountValue[][] {
     // Create scanlines for pixel stack
-    const pixelStack: PixelValue[][] = [];
+    const pixelStack: PixelCountValue[][] = [];
     for (let i = 0; i < this.height; i++) {
       pixelStack.push([]);
     }
@@ -128,7 +152,7 @@ export class TgxWriter extends FileWriter {
 
       // Read next color
       const [r, g, b, a] = imageData.data.slice(parseIndex, parseIndex + 4);
-      const currentValue: PixelValue = { r, g, b, a, count: 1 };
+      const currentValue: PixelCountValue = { r, g, b, a, count: 1 };
 
       // Pop for compare
       const lastValue = pixelStack[y].pop();
@@ -157,7 +181,11 @@ export class TgxWriter extends FileWriter {
     return pixelStack;
   }
 
-  private writePixelStream(pixels: PixelStreamValue[]) {
+  /**
+   * Write pixel stream
+   * @param pixels Pixel values to write to stream
+   */
+  private writePixelStream(pixels: PixelValue[]): void {
     if (pixels.length === 0) {
       return;
     }
@@ -172,20 +200,36 @@ export class TgxWriter extends FileWriter {
     pixels.length = 0;
   }
 
-  private writePixelRepeated(pixel: PixelValue) {
+  /**
+   * Write repeated pixel
+   * @param pixel Pixel to repeat with length data
+   */
+  private writePixelRepeated(pixel: PixelValue, count: number) {
     const bytes = color32to15(pixel.r, pixel.g, pixel.b);
-    this.writeToken(TokenType.Repeated, pixel.count);
+    this.writeToken(TokenType.Repeated, count);
     this.writeBytes(bytes);
   }
 
-  private writeTransparent(length: number) {
-    this.writeToken(TokenType.Transparent, length);
+  /**
+   * Write transparent pixels
+   * @param count Number of transparent pixels
+   */
+  private writeTransparent(count: number) {
+    this.writeToken(TokenType.Transparent, count);
   }
 
+  /**
+   * Add line ending to file for full compatibility
+   */
   private writeLineEnding() {
     this.writeToken(TokenType.EndLine, 1);
   }
 
+  /**
+   * Write a token to the file
+   * @param type Type of token
+   * @param length Length of data if applicable
+   */
   private writeToken(type: TokenType, length: number): void {
     console.assert(length > 0 && length <= 32);
     const tokenByte = (type << 5) | ((length - 1) & 0b00011111);
