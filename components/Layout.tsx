@@ -27,13 +27,8 @@ const Footer = styled("footer")(({ theme }) => ({
   borderTop: "1px solid #eaeaea",
   justifyContent: "center",
   alignItems: "center",
+  columnGap: theme.spacing(2),
   backgroundColor: theme.palette.background.paper,
-  a: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexGrow: 1,
-  },
 }));
 
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -70,6 +65,14 @@ export const Layout: React.FC<LayoutProps> = ({
           rel="noopener noreferrer"
         >
           Created by Allan Legemaate
+        </a>
+        <a
+          href="https://github.com/alegemaate/stronghold-converters-ui"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Github"
+        >
+          Github
         </a>
       </Footer>
     </Main>

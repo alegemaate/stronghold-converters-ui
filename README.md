@@ -2,7 +2,7 @@
 
 [![Deploy Site](https://github.com/alegemaate/stronghold-converters-ui/actions/workflows/deploy.yml/badge.svg)](https://github.com/alegemaate/stronghold-converters-ui/actions/workflows/deploy.yml)
 
-A collection of Javascript based file converters for Stronghold Crusader
+A collection of Javascript based file converters for Stronghold and Stronghold Crusader.
 
 ## Supported Formats
 

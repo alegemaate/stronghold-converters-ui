@@ -8,9 +8,9 @@ export const Nav = () => (
       padding: 2,
     }}
   >
-    <Link href="/" passHref>
+    <Link href="/">
       <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-        Stronghold Crusader File Converters
+        Stronghold File Converters
       </Typography>
     </Link>
   </AppBar>

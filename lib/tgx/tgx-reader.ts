@@ -1,18 +1,15 @@
-import { color15to32 } from "./color";
-import { FileReader } from "./file-reader";
+import { TokenType } from ".";
+import { color15to32 } from "../color";
+import { FileReader } from "../file-reader";
 
 interface TgxToken {
   type: TokenType;
   length: number;
 }
 
-enum TokenType {
-  Stream = 0,
-  Transparent = 1,
-  Repeated = 2,
-  EndLine = 4,
-}
-
+/**
+ * TGX reader
+ */
 export class TgxReader extends FileReader {
   private imageData: number[] = [];
 
