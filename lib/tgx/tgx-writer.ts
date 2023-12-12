@@ -1,18 +1,6 @@
-import { color32to15 } from "./color";
-import { FileWriter } from "./file-writer";
-
-enum TokenType {
-  Stream = 0,
-  Transparent = 1,
-  Repeated = 2,
-  EndLine = 4,
-}
-
-interface PixelValue {
-  r: number;
-  g: number;
-  b: number;
-}
+import { TokenType } from ".";
+import { RGBColor, color32to15 } from "../color";
+import { FileWriter } from "../file-writer";
 
 interface PixelCountValue {
   r: number;
@@ -93,7 +81,7 @@ export class TgxWriter extends FileWriter {
     // Write bytes, line by line
     pixelStack.forEach((line) => {
       // Stream happens when multiple pixels in a row that are not the same
-      const pixelStream: PixelValue[] = [];
+      const pixelStream: RGBColor[] = [];
 
       line.forEach((pixel, index) => {
         // Transparent
@@ -185,7 +173,7 @@ export class TgxWriter extends FileWriter {
    * Write pixel stream
    * @param pixels Pixel values to write to stream
    */
-  private writePixelStream(pixels: PixelValue[]): void {
+  private writePixelStream(pixels: RGBColor[]): void {
     if (pixels.length === 0) {
       return;
     }
@@ -193,7 +181,7 @@ export class TgxWriter extends FileWriter {
     this.writeToken(TokenType.Stream, pixels.length);
 
     pixels.forEach((pixel) => {
-      const bytes = color32to15(pixel.r, pixel.g, pixel.b);
+      const bytes = color32to15(pixel);
       this.writeBytes(bytes);
     });
 
@@ -204,8 +192,8 @@ export class TgxWriter extends FileWriter {
    * Write repeated pixel
    * @param pixel Pixel to repeat with length data
    */
-  private writePixelRepeated(pixel: PixelValue, count: number) {
-    const bytes = color32to15(pixel.r, pixel.g, pixel.b);
+  private writePixelRepeated(pixel: RGBColor, count: number) {
+    const bytes = color32to15(pixel);
     this.writeToken(TokenType.Repeated, count);
     this.writeBytes(bytes);
   }

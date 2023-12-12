@@ -1,4 +1,9 @@
-export const fileToImageData = async (file: File) =>
+/**
+ * Import file to image data
+ * @param file - File to convert to image data
+ * @returns - Image data of file
+ */
+export const fileToImageData = async (file: File): Promise<ImageData> =>
   new Promise<ImageData>((resolve, reject) => {
     try {
       const image = new Image();
@@ -30,7 +35,12 @@ export const fileToImageData = async (file: File) =>
     }
   });
 
-export const imageDataToUri = (imageData: ImageData) => {
+/**
+ * Convert image data to URI
+ * @param imageData - Image data to convert to URI
+ * @returns - URI of image data
+ */
+export const imageDataToUri = (imageData: ImageData): string => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 

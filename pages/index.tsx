@@ -11,20 +11,28 @@ const Home: NextPage = () => {
         <Grid item xs={12}>
           <Typography variant="h1">Stronghold Converters</Typography>
           <Typography variant="body1">
-            Stronghold Crusader File Converters
+            Stronghold TGX File Converters. Convert TGX files to PNG and PNG
+            files to TGX Online.
           </Typography>
         </Grid>
 
         <Grid item xs={12}>
-          <Link href="/tgx-to-png" passHref>
-            <MUILink variant="body2">TGX to PNG Converter</MUILink>
-          </Link>
+          <Link href="/tgx-to-png">TGX to PNG Converter</Link>
         </Grid>
 
         <Grid item xs={12}>
-          <Link href="/png-to-tgx" passHref>
-            <MUILink variant="body2">PNG to TGX Converter</MUILink>
-          </Link>
+          <Link href="/png-to-tgx">PNG to TGX Converter</Link>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Typography variant="body1">
+            <a
+              href="https://github.com/alegemaate/stronghold-converters-ui"
+              title="Github Repo"
+            >
+              Github Repo
+            </a>
+          </Typography>
         </Grid>
       </Grid>
     </Layout>

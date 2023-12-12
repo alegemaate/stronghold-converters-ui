@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+/* eslint-disable @next/next/no-img-element */
+import { useEffect, useState } from "react";
 import { imageDataToUri } from "../lib/convert";
 
 interface ImageRendererProps {
@@ -31,7 +32,14 @@ export const ImageRenderer: React.FC<ImageRendererProps> = ({
 
   return (
     <>
-      <img src={imageSrc} width="100%" alt="Image output" />
+      <img
+        src={imageSrc}
+        width="100%"
+        alt="Image output"
+        style={{
+          imageRendering: "pixelated",
+        }}
+      />
       <a href={downloadSrc} download={name}>
         Download [{name}]
       </a>
